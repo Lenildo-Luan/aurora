@@ -214,16 +214,17 @@ CREATE POLICY "Users can delete occurrences from their own entries"
 
 -- Function to update the updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $function$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
+$function$
+LANGUAGE plpgsql;
 
 -- Function to add or update event in user's library
 CREATE OR REPLACE FUNCTION upsert_user_event(p_user_id UUID, p_event_name TEXT)
-RETURNS VOID AS $
+RETURNS VOID AS $function$
 BEGIN
     INSERT INTO user_events (user_id, name, usage_count, last_used_at)
     VALUES (p_user_id, p_event_name, 1, NOW())
@@ -232,11 +233,11 @@ BEGIN
         usage_count = user_events.usage_count + 1,
         last_used_at = NOW();
 END;
-$ LANGUAGE plpgsql SECURITY DEFINER;
-
+$function$
+LANGUAGE plpgsql SECURITY DEFINER;
 -- Function to add or update occurrence in user's library
 CREATE OR REPLACE FUNCTION upsert_user_occurrence(p_user_id UUID, p_occurrence_name TEXT)
-RETURNS VOID AS $
+RETURNS VOID AS $function$
 BEGIN
     INSERT INTO user_occurrences (user_id, name, usage_count, last_used_at)
     VALUES (p_user_id, p_occurrence_name, 1, NOW())
@@ -245,11 +246,11 @@ BEGIN
         usage_count = user_occurrences.usage_count + 1,
         last_used_at = NOW();
 END;
-$ LANGUAGE plpgsql SECURITY DEFINER;
-
+$function$
+LANGUAGE plpgsql SECURITY DEFINER;
 -- Trigger to automatically update user_events when an entry_event is created
 CREATE OR REPLACE FUNCTION sync_user_events()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $function$
 DECLARE
     v_user_id UUID;
 BEGIN
@@ -263,11 +264,11 @@ BEGIN
     
     RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
-
+$function$
+LANGUAGE plpgsql;
 -- Trigger to automatically update user_occurrences when an entry_occurrence is created
 CREATE OR REPLACE FUNCTION sync_user_occurrences()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $function$
 DECLARE
     v_user_id UUID;
 BEGIN
@@ -281,7 +282,8 @@ BEGIN
     
     RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
+$function$
+LANGUAGE plpgsql;
 
 -- Triggers to automatically update updated_at
 CREATE TRIGGER update_tracked_occurrences_updated_at

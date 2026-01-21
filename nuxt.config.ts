@@ -5,7 +5,8 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxt/a11y',
     '@nuxt/hints',
-    '@nuxt/test-utils'
+    '@nuxt/test-utils',
+    '@nuxtjs/supabase'
   ],
 
   devtools: {
@@ -29,10 +30,18 @@ export default defineNuxtConfig({
     }
   },
 
-  runtimeConfig: {
-    public: {
-      supabaseUrl: process.env.SUPABASE_URL,
-      supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
+  supabase: {  
+    redirectOptions: {
+      login: '/login',
+      callback: '/confirm',
+      include: undefined,
+      exclude: [],
+      saveRedirectToCookie: false,
     },
+    cookieOptions: {
+      maxAge: 60 * 60 * 8,
+      sameSite: 'lax',
+      secure: true
+    }
   },
 })
