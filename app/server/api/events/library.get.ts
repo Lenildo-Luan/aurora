@@ -1,28 +1,22 @@
-// server/api/events/library.get.ts
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import type { Database } from '~/types/database.types.ts'
+import { 
+    getAuthenticatedClient,
+    handleSupabaseError,
+    buildResponse
+ } from '~/server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
-  // Get authenticated user
-  const user = await serverSupabaseUser(event)
-  
-  if (!user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized - User not authenticated'
-    })
-  }
+  const { supabase, user } = await getAuthenticatedClient(event)
 
-  // Get Supabase client with user context
-  const supabase = await serverSupabaseClient<Database>(event)
-
-  // Get query parameters for sorting and filtering
+  // Get query parameters
   const query = getQuery(event)
-  const {
-    sortBy = 'recent', // 'recent', 'frequent', 'alphabetical'
+  const { 
+    sortBy = 'recent', 
     limit = 100,
-    search
+    search 
   } = query
+
+  // Parse and validate pagination (max 100)
+  const validLimit = Math.min(Number(limit), 100)
 
   try {
     // Build the base query
@@ -36,11 +30,12 @@ export default defineEventHandler(async (event) => {
       dbQuery = dbQuery.ilike('name', `%${search}%`)
     }
 
-    // Apply sorting
+    // Apply sorting based on sortBy parameter
     switch (sortBy) {
       case 'frequent':
-        dbQuery = dbQuery.order('usage_count', { ascending: false })
-        dbQuery = dbQuery.order('last_used_at', { ascending: false })
+        dbQuery = dbQuery
+          .order('usage_count', { ascending: false })
+          .order('last_used_at', { ascending: false })
         break
       case 'alphabetical':
         dbQuery = dbQuery.order('name', { ascending: true })
@@ -52,16 +47,12 @@ export default defineEventHandler(async (event) => {
     }
 
     // Apply limit
-    dbQuery = dbQuery.limit(Number(limit))
+    dbQuery = dbQuery.limit(validLimit)
 
     const { data: events, error } = await dbQuery
 
     if (error) {
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Failed to fetch events library',
-        data: error
-      })
+      handleSupabaseError(error, 'Failed to fetch events library')
     }
 
     // Transform to frontend-friendly format
@@ -73,22 +64,19 @@ export default defineEventHandler(async (event) => {
       createdAt: evt.created_at
     }))
 
-    return {
-      success: true,
-      data: transformedEvents,
-      meta: {
+    // Utility: Build standard response
+    return buildResponse(
+      transformedEvents,
+      undefined,
+      {
         total: transformedEvents.length,
         sortBy,
-        limit: Number(limit)
+        limit: validLimit
       }
-    }
+    )
 
   } catch (error: any) {
-    console.error('Error fetching events library:', error)
-    throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Internal server error',
-      data: error.data
-    })
+    // Errors already handled by utilities
+    throw error
   }
 })

@@ -1,191 +1,127 @@
-// server/api/journal/entries.post.ts
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import type { Database } from '~/types/database.types.ts'
+import { 
+    getAuthenticatedClient, 
+    validateDateFormat,
+    recordExists,
+    fetchOwnedResource,
+    handleSupabaseError,
+    sanitizeTextArray,
+    buildResponse
+ } from '~/server/utils/supabase'
 
 interface CreateEntryBody {
-  entryDate: string // YYYY-MM-DD format
+  entryDate: string
   events: string[]
   occurrences: string[]
 }
 
 export default defineEventHandler(async (event) => {
-  // Get authenticated user
-  const user = await serverSupabaseUser(event)
-  
-  if (!user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized - User not authenticated'
-    })
-  }
-
-  // Get Supabase client with user context
-  const supabase = await serverSupabaseClient<Database>(event)
+  // Get authenticated client in one line
+  const { supabase, user } = await getAuthenticatedClient(event)
 
   // Parse request body
   const body = await readBody<CreateEntryBody>(event)
 
-  // Validate input
+  // Validate date format
   if (!body.entryDate) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Entry date is required'
     })
   }
-
-  // Validate date format (YYYY-MM-DD)
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-  if (!dateRegex.test(body.entryDate)) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid date format. Use YYYY-MM-DD'
-    })
-  }
+  validateDateFormat(body.entryDate, 'Entry date')
 
   try {
     // Check if entry already exists for this date
-    const { data: existingEntry } = await supabase
-      .from('journal_entries')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('entry_date', body.entryDate)
-      .single()
+    const existingEntry = await recordExists(supabase, 'journal_entries', {
+      user_id: user.id,
+      entry_date: body.entryDate
+    })
 
     let entryId: string
 
     if (existingEntry) {
-      // Update existing entry
-      entryId = existingEntry.id
+      // Get existing entry
+      const entry = await fetchOwnedResource(
+        supabase,
+        'journal_entries',
+        body.entryDate,
+        user.id,
+        'id',
+        'journal entry'
+      )
+      entryId = entry.id
 
       // Delete existing events and occurrences
-      await supabase
-        .from('entry_events')
-        .delete()
-        .eq('entry_id', entryId)
-
-      await supabase
-        .from('entry_occurrences')
-        .delete()
-        .eq('entry_id', entryId)
-
+      await supabase.from('entry_events').delete().eq('entry_id', entryId)
+      await supabase.from('entry_occurrences').delete().eq('entry_id', entryId)
     } else {
-      // Create new journal entry
-      const { data: newEntry, error: entryError } = await supabase
+      // Create new entry
+      const { data: newEntry, error } = await supabase
         .from('journal_entries')
-        .insert({
-          user_id: user.id,
-          entry_date: body.entryDate
-        })
+        .insert({ user_id: user.id, entry_date: body.entryDate })
         .select('id')
         .single()
 
-      if (entryError) {
-        throw createError({
-          statusCode: 500,
-          statusMessage: 'Failed to create journal entry',
-          data: entryError
-        })
-      }
-
+      if (error) handleSupabaseError(error, 'Failed to create journal entry')
       entryId = newEntry.id
     }
 
-    // Insert events if provided
-    if (body.events && body.events.length > 0) {
-      const eventsToInsert = body.events
-        .filter(event => event && event.trim().length > 0)
-        .map(event => ({
+    // ✨ Utility: Sanitize text arrays
+    const sanitizedEvents = sanitizeTextArray(body.events || [])
+    const sanitizedOccurrences = sanitizeTextArray(body.occurrences || [])
+
+    // Insert events
+    if (sanitizedEvents.length > 0) {
+      const { error } = await supabase
+        .from('entry_events')
+        .insert(sanitizedEvents.map(name => ({
           entry_id: entryId,
-          event_name: event.trim().toLowerCase()
-        }))
+          event_name: name
+        })))
 
-      if (eventsToInsert.length > 0) {
-        const { error: eventsError } = await supabase
-          .from('entry_events')
-          .insert(eventsToInsert)
-
-        if (eventsError) {
-          throw createError({
-            statusCode: 500,
-            statusMessage: 'Failed to insert events',
-            data: eventsError
-          })
-        }
-      }
+      if (error) handleSupabaseError(error, 'Failed to insert events')
     }
 
-    // Insert occurrences if provided
-    if (body.occurrences && body.occurrences.length > 0) {
-      const occurrencesToInsert = body.occurrences
-        .filter(occurrence => occurrence && occurrence.trim().length > 0)
-        .map(occurrence => ({
+    // Insert occurrences
+    if (sanitizedOccurrences.length > 0) {
+      const { error } = await supabase
+        .from('entry_occurrences')
+        .insert(sanitizedOccurrences.map(name => ({
           entry_id: entryId,
-          occurrence_name: occurrence.trim().toLowerCase()
-        }))
+          occurrence_name: name
+        })))
 
-      if (occurrencesToInsert.length > 0) {
-        const { error: occurrencesError } = await supabase
-          .from('entry_occurrences')
-          .insert(occurrencesToInsert)
-
-        if (occurrencesError) {
-          throw createError({
-            statusCode: 500,
-            statusMessage: 'Failed to insert occurrences',
-            data: occurrencesError
-          })
-        }
-      }
+      if (error) handleSupabaseError(error, 'Failed to insert occurrences')
     }
 
-    // Fetch the complete entry with relations
+    // Fetch complete entry
     const { data: completeEntry, error: fetchError } = await supabase
       .from('journal_entries')
       .select(`
-        id,
-        entry_date,
-        created_at,
-        updated_at,
-        events:entry_events(
-          id,
-          event_name
-        ),
-        occurrences:entry_occurrences(
-          id,
-          occurrence_name
-        )
+        id, entry_date, created_at, updated_at,
+        events:entry_events(id, event_name),
+        occurrences:entry_occurrences(id, occurrence_name)
       `)
       .eq('id', entryId)
       .single()
 
-    if (fetchError) {
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Failed to fetch created entry',
-        data: fetchError
-      })
-    }
+    if (fetchError) handleSupabaseError(fetchError, 'Failed to fetch created entry')
 
-    // Transform to frontend-friendly format
-    return {
-      success: true,
-      message: existingEntry ? 'Entry updated successfully' : 'Entry created successfully',
-      data: {
+    // Build standard response
+    return buildResponse(
+      {
         id: completeEntry.id,
         entryDate: completeEntry.entry_date,
         createdAt: completeEntry.created_at,
         updatedAt: completeEntry.updated_at,
         events: completeEntry.events?.map(e => e.event_name) || [],
         occurrences: completeEntry.occurrences?.map(o => o.occurrence_name) || []
-      }
-    }
+      },
+      existingEntry ? 'Entry updated successfully' : 'Entry created successfully'
+    )
 
   } catch (error: any) {
-    console.error('Error creating journal entry:', error)
-    throw createError({
-      statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || 'Internal server error',
-      data: error.data
-    })
+    // Already handled by utils
+    throw error
   }
 })
