@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useEvents } from '~/composables/useEvents'
+
 interface Props {
   modelValue: string[]
   placeholder?: string
@@ -121,7 +123,10 @@ const removeEvent = (eventName: string) => {
 const handleKeydown = (event: KeyboardEvent) => {
   // Backspace on empty input removes last event
   if (event.key === 'Backspace' && !inputValue.value && selectedEvents.value.length > 0) {
-    removeEvent(selectedEvents.value[selectedEvents.value.length - 1])
+    const last = selectedEvents.value[selectedEvents.value.length - 1]
+    if (last) {
+      removeEvent(last)
+    }
   }
   
   // Enter adds the event
