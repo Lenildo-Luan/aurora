@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useOccurrences } from '~/composables/useOccurrences'
+
 interface Props {
   modelValue: string[]
   placeholder?: string
@@ -144,7 +146,10 @@ const removeOccurrence = (occurrenceName: string) => {
 const handleKeydown = (event: KeyboardEvent) => {
   // Backspace on empty input removes last occurrence
   if (event.key === 'Backspace' && !inputValue.value && selectedOccurrences.value.length > 0) {
-    removeOccurrence(selectedOccurrences.value[selectedOccurrences.value.length - 1])
+    const last = selectedOccurrences.value[selectedOccurrences.value.length - 1]
+    if (last !== undefined) {
+      removeOccurrence(last)
+    }
   }
   
   // Enter adds the occurrence
