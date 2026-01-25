@@ -236,9 +236,9 @@ const onCancel = () => {
               <UButton
                 @click="removeEvent(event)"
                 icon="i-heroicons-x-mark"
-                color="white"
+                color="neutral"
                 variant="link"
-                size="2xs"
+                size="xs"
                 :padded="false"
                 class="ml-1"
               />
@@ -254,7 +254,6 @@ const onCancel = () => {
               v-for="event in popularEvents"
               :key="event.id"
               @click="addEvent(event.name)"
-              color="gray"
               variant="soft"
               class="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
             >
@@ -297,7 +296,7 @@ const onCancel = () => {
               v-for="occ in occurrenceSuggestions"
               :key="occ.id"
               @click="addOccurrence(occ.name)"
-              color="amber"
+              color="info"
               variant="soft"
               class="cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900"
             >
@@ -314,7 +313,7 @@ const onCancel = () => {
             <UBadge
               v-for="occ in state.selectedOccurrences"
               :key="occ"
-              color="amber"
+              color="info"
               variant="solid"
               size="lg"
             >
@@ -322,9 +321,9 @@ const onCancel = () => {
               <UButton
                 @click="removeOccurrence(occ)"
                 icon="i-heroicons-x-mark"
-                color="white"
+                color="neutral"
                 variant="link"
-                size="2xs"
+                size="xs"
                 :padded="false"
                 class="ml-1"
               />
@@ -340,7 +339,6 @@ const onCancel = () => {
               v-for="occ in trackedOccurrences"
               :key="occ.id"
               @click="addOccurrence(occ.name)"
-              color="gray"
               variant="soft"
               class="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
             >
@@ -356,7 +354,6 @@ const onCancel = () => {
       <div class="flex justify-end gap-3">
         <UButton 
           @click="onCancel"
-          color="gray"
           variant="ghost"
           size="lg"
         >
