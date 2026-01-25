@@ -31,7 +31,7 @@ const {
 } = useEvents()
 const { 
   occurrences: occurrencesLibrary,
-  trackedOccurrences,
+  getTracked,
   getSuggestions: getOccurrenceSuggestions,
   fetchOccurrences 
 } = useOccurrences()
@@ -81,6 +81,8 @@ const popularOccurrences = computed(() =>
     .filter(o => !state.selectedOccurrences.includes(o.name))
     .slice(0, 10)
 )
+
+const trackedOccurrences = computed(() => getTracked()) 
 
 // Add event
 const addEvent = (eventName: string) => {
