@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '#ui/types'
+import { useEvents } from '~/composables/useEvents'
 import { useJournal } from '~/composables/useJournal'
+import { useOccurrences } from '~/composables/useOccurrences'
 
 interface Props {
   initialDate?: string
@@ -10,7 +12,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  initialDate: () => new Date().toISOString().split('T')[0],
+  initialDate: new Date().toISOString().split('T')[0],
   initialEvents: () => [],
   initialOccurrences: () => [],
   mode: 'create'
@@ -36,7 +38,7 @@ const {
 
 // Form state
 const state = reactive({
-  entryDate: props.initialDate,
+  entryDate: props.initialDate ?? new Date().toISOString().split('T')[0],
   selectedEvents: [...props.initialEvents],
   selectedOccurrences: [...props.initialOccurrences],
   newEvent: '',
@@ -130,7 +132,7 @@ const onSubmit = async () => {
     toast.add({
       title: props.mode === 'create' ? 'Entrada criada!' : 'Entrada atualizada!',
       description: `Registro do dia ${state.entryDate} salvo com sucesso.`,
-      color: 'green'
+      color: 'success'
     })
 
     emit('submit', payload)
@@ -139,13 +141,13 @@ const onSubmit = async () => {
     if (props.mode === 'create') {
       state.selectedEvents = []
       state.selectedOccurrences = []
-      state.entryDate = new Date().toISOString().split('T')[0]
+      state.entryDate = new Date().toISOString().split('T')[0]!
     }
   } catch (error: any) {
     toast.add({
       title: 'Erro ao salvar',
       description: error.message || 'Não foi possível salvar a entrada.',
-      color: 'red'
+      color: 'error'
     })
   } finally {
     loading.value = false
