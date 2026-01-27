@@ -80,7 +80,7 @@ export const useJournal = () => {
     error.value = null
 
     try {
-      const { data, error: createError } = await useFetch('/api/journal/entries', {
+      const { data, error: createError } = await useFetch<{ success: boolean; data: JournalEntry, meta: any }>('/api/journal/entries', {
         method: 'POST',
         body: payload
       })
