@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useJournal } from '~/composables/useJournal'
+
 definePageMeta({
   middleware: 'auth'
 })
@@ -9,7 +11,6 @@ const {
   error,
   totalEntries,
   hasMore,
-  dateRange,
   fetchEntries,
   deleteEntry,
   loadMore,
@@ -89,7 +90,7 @@ const handleDelete = async () => {
     toast.add({
       title: 'Entrada deletada',
       description: 'A entrada foi removida com sucesso.',
-      color: 'green'
+      color: 'success'
     })
     
     deleteConfirmOpen.value = false
@@ -98,7 +99,7 @@ const handleDelete = async () => {
     toast.add({
       title: 'Erro ao deletar',
       description: err.message || 'Não foi possível deletar a entrada.',
-      color: 'red'
+      color: 'error'
     })
   }
 }
@@ -164,7 +165,7 @@ const sortedMonthKeys = computed(() =>
         <div class="flex gap-3">
           <UButton
             @click="showFilters = !showFilters"
-            :color="hasActiveFilters ? 'primary' : 'gray'"
+            :color="hasActiveFilters ? 'primary' : 'neutral'"
             variant="outline"
             icon="i-heroicons-funnel"
           >
@@ -208,7 +209,6 @@ const sortedMonthKeys = computed(() =>
           <div class="flex justify-end gap-2">
             <UButton
               @click="clearFilters"
-              color="gray"
               variant="ghost"
             >
               Limpar
@@ -232,7 +232,7 @@ const sortedMonthKeys = computed(() =>
     <!-- Error State -->
     <UAlert
       v-else-if="error"
-      color="red"
+      color="error"
       variant="soft"
       title="Erro ao carregar entradas"
       :description="error"
@@ -312,7 +312,7 @@ const sortedMonthKeys = computed(() =>
                     <UBadge
                       v-for="occurrence in entry.occurrences"
                       :key="occurrence"
-                      color="amber"
+                      color="info"
                       variant="soft"
                     >
                       {{ occurrence }}
@@ -334,7 +334,6 @@ const sortedMonthKeys = computed(() =>
                 <UButton
                   @click="editEntry(entry)"
                   icon="i-heroicons-pencil"
-                  color="gray"
                   variant="ghost"
                   size="sm"
                   title="Editar"
@@ -342,7 +341,7 @@ const sortedMonthKeys = computed(() =>
                 <UButton
                   @click="confirmDelete(entry.id)"
                   icon="i-heroicons-trash"
-                  color="red"
+                  color="error"
                   variant="ghost"
                   size="sm"
                   title="Deletar"
@@ -387,14 +386,13 @@ const sortedMonthKeys = computed(() =>
           <div class="flex justify-end gap-2">
             <UButton
               @click="deleteConfirmOpen = false"
-              color="gray"
               variant="ghost"
             >
               Cancelar
             </UButton>
             <UButton
               @click="handleDelete"
-              color="red"
+              color="error"
               :loading="loading"
             >
               Deletar
