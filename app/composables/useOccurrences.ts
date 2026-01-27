@@ -30,7 +30,7 @@ export const useOccurrences = () => {
     error.value = null
 
     try {
-      const { data, error: fetchError } = await useFetch('/api/occurrences/library', {
+      const { data, error: fetchError } = await useFetch<{ success: boolean; data: Occurrence[] }>('/api/occurrences/library', {
         method: 'GET',
         query: params
       })
@@ -214,7 +214,7 @@ export const useOccurrences = () => {
     const grouped: Record<string, Occurrence[]> = {}
     
     occurrences.value.forEach(occurrence => {
-      const letter = occurrence.name[0].toUpperCase()
+      const letter =  occurrence.name[0] === undefined ? '' : occurrence.name[0].toUpperCase()
       if (!grouped[letter]) {
         grouped[letter] = []
       }

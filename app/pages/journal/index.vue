@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { useJournal } from '~/composables/useJournal'
 
-definePageMeta({
-  middleware: 'auth'
+const user = useSupabaseUser()
+
+watchEffect(() => {
+  if (user.value === null) {
+    navigateTo('/login')
+  }
 })
 
 const { 
@@ -267,7 +271,7 @@ const sortedMonthKeys = computed(() =>
         class="month-group"
       >
         <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4 capitalize">
-          {{ entriesByMonth[monthKey][0].monthLabel }}
+          {{ entriesByMonth[monthKey] === undefined ? '' : entriesByMonth[monthKey][0].monthLabel }}
         </h2>
         
         <div class="space-y-3">
@@ -361,7 +365,7 @@ const sortedMonthKeys = computed(() =>
       <!-- Load More Button -->
       <div v-if="hasMore" class="flex justify-center pt-6">
         <UButton
-          @click="loadMore"
+          @click="loadMore()"
           :loading="loading"
           variant="outline"
           size="lg"
