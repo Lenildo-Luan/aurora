@@ -28,7 +28,7 @@ export const useEvents = () => {
     error.value = null
 
     try {
-      const { data, error: fetchError } = await useFetch('/api/events/library', {
+      const { data, error: fetchError } = await useFetch<{ success: boolean; data: Event[] }>('/api/events/library', {
         method: 'GET',
         query: params
       })
@@ -180,7 +180,7 @@ export const useEvents = () => {
     const grouped: Record<string, Event[]> = {}
     
     events.value.forEach(event => {
-      const letter = event.name[0].toUpperCase()
+      const letter = event.name.charAt(0).toUpperCase()
       if (!grouped[letter]) {
         grouped[letter] = []
       }

@@ -48,7 +48,7 @@ export const useJournal = () => {
     error.value = null
 
     try {
-      const { data, error: fetchError } = await useFetch('/api/journal/entries', {
+      const { data, error: fetchError } = await useFetch<{ success: boolean; data: Event[] }>('/api/journal/entries', {
         method: 'GET',
         query: params
       })
@@ -119,7 +119,7 @@ export const useJournal = () => {
     error.value = null
 
     try {
-      const { data, error: deleteError } = await useFetch(`/api/journal/${entryId}`, {
+      const { data, error: deleteError } = await useFetch<{ success: boolean; data: Event[] }>(`/api/journal/${entryId}`, {
         method: 'DELETE'
       })
 
@@ -182,7 +182,7 @@ export const useJournal = () => {
     error.value = null
 
     try {
-      const { data, error: fetchError } = await useFetch('/api/journal/entries', {
+      const { data, error: fetchError } = await useFetch<{ success: boolean; data: Event[] }>('/api/journal/entries', {
         method: 'GET',
         query: {
           limit: pagination.value.limit,
