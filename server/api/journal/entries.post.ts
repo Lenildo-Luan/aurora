@@ -6,7 +6,7 @@ import {
     handleSupabaseError,
     sanitizeTextArray,
     buildResponse
- } from '~/server/utils/supabase'
+ } from '../../../server/utils/supabase'
 
 interface CreateEntryBody {
   entryDate: string

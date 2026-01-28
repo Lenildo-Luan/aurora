@@ -4,7 +4,7 @@ import {
     buildResponse,
     validateUUID,
     fetchOwnedResource
- } from '~/server/utils/supabase'
+ } from '../../../server/utils/supabase'
 
 
 export default defineEventHandler(async (event) => {

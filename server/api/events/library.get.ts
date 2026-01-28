@@ -2,7 +2,7 @@ import {
     getAuthenticatedClient,
     handleSupabaseError,
     buildResponse
- } from '~/server/utils/supabase'
+ } from '../../../server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   const { supabase, user } = await getAuthenticatedClient(event)

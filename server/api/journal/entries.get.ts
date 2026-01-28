@@ -5,7 +5,7 @@ import {
     getPaginationParams,
     buildPaginationMeta,
     countRecords
- } from '~/server/utils/supabase'
+ } from '../../../server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   // Get authenticated client in one line
@@ -15,11 +15,13 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const { limit, offset } = getPaginationParams(query)
   
-  // Extract filter parameters
+  // Extrparameters
   const { startDate, endDate, occurrence, event: eventName } = query
 
   try {
     // Build the base query with relations
+    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    console.log(user)
     let dbQuery = supabase
       .from('journal_entries')
       .select(`

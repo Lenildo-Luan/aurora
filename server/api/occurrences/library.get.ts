@@ -3,7 +3,7 @@ import {
     getAuthenticatedClient,
     handleSupabaseError,
     buildResponse
- } from '~/server/utils/supabase'
+ } from '../../../server/utils/supabase'
 
 export default defineEventHandler(async (event) => {
   // Get authenticated client in one line
