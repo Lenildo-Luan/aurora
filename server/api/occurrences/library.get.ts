@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
     let dbQuery = supabase
       .from('user_occurrences')
       .select('id, name, usage_count, last_used_at, created_at')
-      .eq('user_id', user.id)
+      .eq('user_id', user.sub)
 
     // Apply search filter if provided
     if (search && typeof search === 'string') {
@@ -63,7 +63,7 @@ export default defineEventHandler(async (event) => {
     const { data: tracked, error: trackedError } = await supabase
       .from('tracked_occurrences')
       .select('name')
-      .eq('user_id', user.id)
+      .eq('user_id', user.sub)
 
     if (trackedError) {
       console.error('Failed to fetch tracked occurrences:', trackedError)

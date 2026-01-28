@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
   try {
     // Check if entry already exists for this date
     const existingEntry = await recordExists(supabase, 'journal_entries', {
-      user_id: user.id,
+      user_id: user.sub,
       entry_date: body.entryDate
     })
 
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
         supabase,
         'journal_entries',
         body.entryDate,
-        user.id,
+        user.sub,
         'id',
         'journal entry'
       )
@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
       // Create new entry
       const { data: newEntry, error } = await supabase
         .from('journal_entries')
-        .insert({ user_id: user.id, entry_date: body.entryDate })
+        .insert({ user_id: user.sub, entry_date: body.entryDate })
         .select('id')
         .single()
 

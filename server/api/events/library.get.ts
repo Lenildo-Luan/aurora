@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     let dbQuery = supabase
       .from('user_events')
       .select('id, name, usage_count, last_used_at, created_at')
-      .eq('user_id', user.id)
+      .eq('user_id', user.sub)
 
     // Apply search filter if provided
     if (search && typeof search === 'string') {

@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
           created_at
         )
       `)
-      .eq('user_id', user.id)
+      .eq('user_id', user.sub)
 
     // Apply date range filters
     if (startDate) {
@@ -78,7 +78,7 @@ export default defineEventHandler(async (event) => {
 
     // Get total count
     const total = await countRecords(supabase, 'journal_entries', {
-      user_id: user.id
+      user_id: user.sub
     })
 
     // Transform data to frontend-friendly format

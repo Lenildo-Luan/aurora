@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
       supabase,
       'journal_entries',
       entryId,
-      user.id,
+      user.sub,
       'id, entry_date',
       'Journal entry'
     )
