@@ -9,6 +9,13 @@ export default defineNuxtConfig({
     '@nuxtjs/supabase'
   ],
 
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false,
+    },
+  ],
+
   devtools: {
     enabled: true
   },
@@ -30,7 +37,7 @@ export default defineNuxtConfig({
     }
   },
 
-  supabase: {  
+  supabase: {
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
